@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:13.3
+    environment:
+      POSTGRES_DB: "meteo"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "pass"
+    #ports:
+    #  - "5432:5432"
+      #загрузка sql кода при старте
+    #volumes:
+    #  - db_data:/var/lib/postgresql/data
+    #  - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      #проверка на готовность бд принимать запросы
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  node:
+    build: "./app"
+    environment:
+      DB_HOST: "postgres" # Хост PostgreSQL — имя сервиса
+      DB_PORT: 5432       # Порт PostgreSQL
+      DB_NAME: "meteo"
+      DB_USER: "postgres"
+      DB_PASSWORD: "pass"
+      DATABASE_URL: "postgresql://postgres:pass@postgres:5432/meteo?schema=public"
+    ports:
+      - "3000:3000"
+    command: sh -c "npx prisma migrate deploy && npx prisma generate && npx prisma db seed && npm start"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+
+#Сохранение данных между пересозданием контейнера на локальном хосте
+#volumes: 
+#  db_data:

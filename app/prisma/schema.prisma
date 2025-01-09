@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  id       Int     @id @default(autoincrement())
+  username String  @db.VarChar(50)
+  password String  @db.VarChar(100)
+  role     String? @db.VarChar(20)
+  email    String?
+}
+
+model stations {
+  id           Int            @id @default(autoincrement())
+  name         String         @db.VarChar(255)
+  latitude     Float
+  longitude    Float
+  measurements measurements[]
+}
+
+model measurements {
+  id          Int      @id @default(autoincrement())
+  date        DateTime @db.Date
+  temperature Float
+  humidity    Float
+  wind_speed  Float
+  station_id  Int
+  station     stations @relation(fields: [station_id], references: [id])
+}
